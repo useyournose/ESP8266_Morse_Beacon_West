@@ -48,8 +48,40 @@ const int max_message_len = 500;
 
 // Table of character to morse code mapping.
 // Each string represents the dashes and dots for a character.
-const char* morse_codes[36] = {
-  ".-",     // A
+const char* morse_codes[61] = {
+  //"",// blank 33
+  "..--.", // !
+  ".-..-.", // "
+  "", // #
+  "...-..-", // $
+  "", // %
+  ".-...", // &
+  ".----.", // '
+  "-.--.", // (
+  "-.--.-", // )
+  "-..-", // *
+  ".-.-.", // +
+  "--..--", // ,
+  "-....-", // -
+  ".-.-.-", // .
+  "----",   // 0 48
+  ".----",  // 1
+  "..---",  // 2
+  "...--",  // 3
+  "....-",  // 4
+  ".....",  // 5
+  "-....",  // 6
+  "--...",  // 7
+  "---..",  // 8
+  "----.",   // 9 57
+  "---...", // :
+  "-.-.-.", // ;
+  "", // <
+  "-...-", // =
+  "", // >
+  "..--..", // ?
+  "..-.-.", // @
+  ".-",     // A 65
   "-...",   // B
   "-.-.",   // C
   "-..",    // D
@@ -74,17 +106,12 @@ const char* morse_codes[36] = {
   ".--",    // W
   "-..-",   // X
   "-.--",   // Y
-  "--..",   // Z
-  "----",   // 0
-  ".----",  // 1
-  "..---",  // 2
-  "...--",  // 3
-  "....-",  // 4
-  ".....",  // 5
-  "-....",  // 6
-  "--...",  // 7
-  "---..",  // 8
-  "----."   // 9
+  "--..",   // Z 90
+  "-.--.", // [
+  "", // \
+  "-.--.-",// ]
+  "", // ^
+  "..--.-" // _ 95
 };
 
 
@@ -159,13 +186,9 @@ void blink_morse_char(int led_pin, char c) {
 
   // First look up the string of morse code for the character.
   const char* code = NULL;
-  if ((c >= 'A') && (c <= 'Z')) {
+  if ((c >= '!') && (c <= '_')) {
     // Get the code for an alphabet character.
-    code = morse_codes[c-'A'];
-  }
-  else if ((c >= '0') && (c <= '9')) {
-    // Get the code for a number.
-    code = morse_codes[c-'0'+26];
+    code = morse_codes[c-34];
   }
   else {
     // Unknown character, ignore it!
