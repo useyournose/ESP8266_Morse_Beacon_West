@@ -17,11 +17,11 @@
 
 
 // Details of AP to connect to on boot. 
-const char* ssid = "your AP name here...";
-const char* password = "your AP password here...";
+const char* ssid = "DerKaiser";
+const char* password = "10352770BE";
 
 // Pin connected to the LED.
-const int led = 13;
+const int led = 17;
 
 // Global web server instance.
 ESP8266WebServer server(80);
