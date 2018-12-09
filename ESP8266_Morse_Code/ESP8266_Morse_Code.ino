@@ -176,30 +176,7 @@ void setup(void)
   
   // Configure a handler for the /morse endpoint.
   server.on("/morse", HTTP_POST, handleMorsePage);
-  
-  //[]() {
-    // Blink out the message in morse code, then respond 
-    // with the root HTML page again.
 
-    // Grab the message form parameter and fail if it's
-    // larger than our max allowed size.
-    // const char* message = server.arg("message").c_str();
-    // if (strlen(message) >= max_message_len) {
-    //  server.send(500, "text/plain", "Message is too long!");
-    //  return;
-    // }
-    // Perform form URL decoding to get the plain message.
-    // char decoded[max_message_len] = {0};
-    // form_url_decode(message, decoded);
-    // Print and blink the message!
-    //Serial.print("Blinking message: "); Serial.println(message);
-    //Serial.print("Blinking message: "); Serial.println(decoded);
-    //blink_morse(led, decoded);
-    // Return the main page again.
-    //server.send(200,"text/html", index_html);
-  //});
-  
-  server.on("/pure.css",HTTP_GET, handlePureCss);
   //list directory
   server.on("/list", HTTP_GET, handleFileList);
   server.on("/generate_204", handleRoot);  //Android captive portal. Maybe not needed. Might be handled by notFound handler.

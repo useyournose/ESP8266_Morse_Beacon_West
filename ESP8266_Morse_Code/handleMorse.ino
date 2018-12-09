@@ -32,7 +32,8 @@ void blink_morse_char(int led_pin, char c) {
 
 void blink_morse(int led_pin, const char* message) {
   // Blink out the morse code version of the message on the LED.
-  
+  Serial.println("Starting morsing");
+  Serial.print(message);
   // Process each character in the message and send them out 
   // as morse code. Keep track of the previously seen character
   // to find word boundaries.
