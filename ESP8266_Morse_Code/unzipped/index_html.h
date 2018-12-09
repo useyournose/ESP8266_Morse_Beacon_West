@@ -7,7 +7,7 @@ const char* index_html = R"(
   <html>
     <head>
       <title>Morse Code Blinker</title>
-      <link href="pure.css" rel="stylesheet">
+      <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
       <style>
         body {
           padding-top: 50px;
@@ -22,7 +22,7 @@ const char* index_html = R"(
           <p>Submit text to have it blinked out as morse code on the LED!</p>
           <form action="/morse" method="post">
             <div class="form-group">
-              <input class="form-control input-lg" type="text" id="message" name="message" placeholder="Enter message..." required="required" autocapitalize="characters"  >
+              <input class="form-control input-lg" type="text" id="message" name="message" placeholder="Enter message...">
             </div>
             <button class="btn btn-lg btn-primary" type="submit">Blink it!</button>
           </form>

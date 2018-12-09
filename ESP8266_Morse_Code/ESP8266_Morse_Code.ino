@@ -12,16 +12,31 @@
 //
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
-
+#include <DNSServer.h>
+#include <FS.h>
 #include "index_html.h"
 
-
 // Details of AP to connect to on boot. 
-const char* ssid = "DerKaiser";
-const char* password = "10352770BE";
+const char* ssid = "MorseBeaconWest";
+const char* password = "";
+const int AP_Channel = 1;
+const int max_conn = 1;
+
+// some AP config
+IPAddress local_IP(192,168,4,1);
+IPAddress gateway(0,0,0,0);
+IPAddress subnet(255,255,255,0);
+
+// DNS config
+const byte DNS_PORT = 53;
+DNSServer dnsServer;
 
 // Pin connected to the LED.
-const int led = 17;
+const int led = 2;
+//needed to handle the led pin
+//pinMode(led, OUTPUT);
+//digitalWrite(led,LOW);
+
 
 // Global web server instance.
 ESP8266WebServer server(80);
@@ -52,7 +67,7 @@ const char* morse_codes[61] = {
   //"",// blank 33
   "..--.", // !
   ".-..-.", // "
-  "", // #
+  ".", // #
   "...-..-", // $
   "", // %
   ".-...", // &
@@ -64,7 +79,7 @@ const char* morse_codes[61] = {
   "--..--", // ,
   "-....-", // -
   ".-.-.-", // .
-  "----",   // 0 48
+  "-----",   // 0 48
   ".----",  // 1
   "..---",  // 2
   "...--",  // 3
@@ -76,9 +91,9 @@ const char* morse_codes[61] = {
   "----.",   // 9 57
   "---...", // :
   "-.-.-.", // ;
-  "", // <
+  ".", // <
   "-...-", // =
-  "", // >
+  ".", // >
   "..--..", // ?
   "..-.-.", // @
   ".-",     // A 65
@@ -108,179 +123,103 @@ const char* morse_codes[61] = {
   "-.--",   // Y
   "--..",   // Z 90
   "-.--.", // [
-  "", // \
+  ".", // \
   "-.--.-",// ]
-  "", // ^
+  ".", // ^
   "..--.-" // _ 95
 };
-
 
 void setup(void)
 {
   Serial.begin(115200);
+  Serial.println("Here are all my files!");
+
+  // show all files on Filesystem
+  SPIFFS.begin();
+  Dir dir = SPIFFS.openDir("/");
+  while (dir.next()) {    
+    String fileName = dir.fileName();
+    size_t fileSize = dir.fileSize();
+    Serial.printf("FS File: %s, size: %s\n", fileName.c_str(), formatBytes(fileSize).c_str());
+  }
+  Serial.printf("\n");
   
+  // print SSID
+  Serial.print("Welcome to the ");
+  Serial.println(ssid);
+  
+  Serial.print("Switch off wifi during boot.");
+  WiFi.mode(WIFI_OFF);
   // Setup LED as an output and turn it off.
   pinMode(led, OUTPUT);
   digitalWrite(led, 0);
 
-  // Connect to wifi AP.
-  WiFi.begin(ssid, password);
-  Serial.println("");
+  WiFi.mode(WIFI_AP);
+  Serial.println();
+  Serial.print("Setting soft-AP configuration ...");
+  Serial.println(WiFi.softAPConfig(local_IP, local_IP, subnet) ? "Ready" : "Failed!");
 
-  // Wait for connection to finish and print details.
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("");
-  Serial.print("Connected to ");
+  Serial.print("Setting soft-AP ...");
+  Serial.println(WiFi.softAP(ssid, password,AP_Channel,false,max_conn) ? "Ready" : "Failed!");
+  Serial.println();
+
+  Serial.print("Connection possible to ");
   Serial.println(ssid);
   Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
+  Serial.println(WiFi.softAPIP());
+
+  dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
+  dnsServer.start(DNS_PORT, "*", local_IP);
   
   // Configure web server root handler to return the main 
-  // HTML page.  Note the funny []() { .. code .. } syntax
-  // is a C++11 lambda function, you can learn more about
-  // the syntax here:
-  //   http://www.drdobbs.com/cpp/lambdas-in-c11/240168241   
-  server.on("/", []() {
-    // Serve up the main HTML page.
-    server.send(200, "text/html", index_html);
-  });
+  server.on("/", HTTP_GET, handleRoot);
   
   // Configure a handler for the /morse endpoint.
-  server.on("/morse", []() {
+  server.on("/morse", HTTP_GET, handleMorsePage);
+  
+  //[]() {
     // Blink out the message in morse code, then respond 
     // with the root HTML page again.
 
     // Grab the message form parameter and fail if it's
     // larger than our max allowed size.
-    const char* message = server.arg("message").c_str();
-    if (strlen(message) >= max_message_len) {
-      server.send(500, "text/plain", "Message is too long!");
-      return;
-    }
+    // const char* message = server.arg("message").c_str();
+    // if (strlen(message) >= max_message_len) {
+    //  server.send(500, "text/plain", "Message is too long!");
+    //  return;
+    // }
     // Perform form URL decoding to get the plain message.
-    char decoded[max_message_len] = {0};
-    form_url_decode(message, decoded);
+    // char decoded[max_message_len] = {0};
+    // form_url_decode(message, decoded);
     // Print and blink the message!
-    Serial.print("Blinking message: "); Serial.println(decoded);
-    blink_morse(led, decoded);
+    //Serial.print("Blinking message: "); Serial.println(message);
+    //Serial.print("Blinking message: "); Serial.println(decoded);
+    //blink_morse(led, decoded);
     // Return the main page again.
-    server.send(200, "text/html", index_html);
-  });
+    //server.send(200,"text/html", index_html);
+  //});
   
+  server.on("/pure.css",HTTP_GET, handlePureCss);
+  //list directory
+  server.on("/list", HTTP_GET, handleFileList);
+  server.on("/generate_204", handleRoot);  //Android captive portal. Maybe not needed. Might be handled by notFound handler.
+  server.on("/fwlink", handleRoot);  //Microsoft captive portal. Maybe not needed. Might be handled by notFound handler.
+  //404 handling
+  //server.onNotFound([](){if(!handleFileRead(server.uri())) handleNotFound;});
+  //server.onNotFound(httpDefault);
+  server.onNotFound( handleNotFound );
+  
+  // switch on the http server
   server.begin();
   Serial.println("Morse code HTTP server started!");
+  blink_morse(led, "MORSE BEACON WEST ONLINE");
+  Serial.println("ready");
 }
  
 void loop(void)
 {
+  dnsServer.processNextRequest();
   // Take care of handling any web server requests.
   server.handleClient();
 } 
 
-void blink_morse_char(int led_pin, char c) {
-  // Blink out the morse code for the specified character.
-  // Unrecognized characters are ignored.
-
-  // First look up the string of morse code for the character.
-  const char* code = NULL;
-  if ((c >= '!') && (c <= '_')) {
-    // Get the code for an alphabet character.
-    code = morse_codes[c-34];
-  }
-  else {
-    // Unknown character, ignore it!
-    return;
-  }
-  
-  // Now loop through the components of the code and display them.
-  // Be careful to not delay after the last character.
-  for (int i = 0; i < strlen(code)-1; ++i) {
-     // Turn the LED on, delay for the appropriate dot / dash time,
-     // then turn the LED off again.
-     digitalWrite(led_pin, led_on);
-     delay((code[i] == '.') ? morse_dot_ms : morse_dash_ms);
-     digitalWrite(led_pin, led_off);
-     // Delay between characters.
-     delay(morse_char_delay_ms);
-  }
-  // Handle the last character without any delay after it.
-  digitalWrite(led_pin, led_on);
-  delay((code[strlen(code)-1] == '.') ? morse_dot_ms : morse_dash_ms);
-  digitalWrite(led_pin, led_off);
-}
-
-void blink_morse(int led_pin, const char* message) {
-  // Blink out the morse code version of the message on the LED.
-  
-  // Process each character in the message and send them out 
-  // as morse code. Keep track of the previously seen character
-  // to find word boundaries.
-  char old = toupper(message[0]);
-  blink_morse_char(led_pin, old);
-  for (int i = 1; i < strlen(message); ++i) {
-    char c = toupper(message[i]);
-    // Delay for word boundary if last char is whitespace and 
-    // new char is alphanumeric.
-    if (isspace(old) && isalnum(c)) {
-      delay(morse_word_delay_ms); 
-    }
-    // Delay for letter boundary if both last and new char 
-    // are alphanumeric.
-    else if (isalnum(old) && isalnum(c)) {
-      delay(morse_letter_delay_ms);
-    }
-    // Else do nothing for other character boundaries.
-    
-    // Blink out the current character and move on to the next.
-    blink_morse_char(led_pin, c);
-    old = c;
-  }
-}
-
-void form_url_decode(const char* encoded, char* decoded) {
-  // Decode a string in 'application/x-www-form-urlencoded' format
-  // to its normal ASCII representation.  See details on this
-  // format in the HTML spec at:
-  //   http://www.w3.org/MarkUp/html-spec/html-spec_8.html#SEC8.2.1
-  // Note the output string MUST be large enough to hold the string!
-  // As long as the output is at least as large as the input then
-  // you will never have a problem (i.e. decoded strings are smaller).
-  
-  // Go through each character and trasform it into the decoded
-  // output as appropriate.
-  for (int i = 0, j = 0; i < strlen(encoded); ++i, ++j) {
-    char c = encoded[i];
-    // The + character turns into a space.
-    if (c == '+') {
-      decoded[j] = ' '; 
-    }
-    // The % character indicates a special character in the
-    // form of '%HH' where HH are the hex digits that represent
-    // the character to use.
-    else if (c == '%') {
-      // If there isn't enough input data to read the next two
-      // characters then just stop because this string is malformed.
-      if (i >= strlen(encoded)-2) {
-        return; 
-      }
-      // Grab the next two encoded characters.
-      char high = toupper(encoded[++i]);
-      char low  = toupper(encoded[++i]);
-      // Skip this character if the encoded characters aren't hex.
-      if (!isxdigit(high) || !isxdigit(low)) {
-        continue;
-      }
-      // Convert high and low hex digits to the character
-      // represented by their value.
-      decoded[j] = (low > '9') ? (low-'A')+10 : low-'0';
-      decoded[j] += 16*((high > '9') ? (high-'A')+10 : high-'0');
-    }
-    // All other encoded characters are just copied over.
-    else {
-      decoded[j] = c;
-    }
-  } 
-}
