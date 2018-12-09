@@ -46,7 +46,7 @@ bool handleFileRead(String path) {
   Serial.println("handleFileRead: " + path);
   Serial.println(server.uri());
   if (path.endsWith("/")) {
-    path += "index.htm";
+    path += "index.html";
   }
   String contentType = getContentType(path);
   String pathWithGz = path + ".gz";

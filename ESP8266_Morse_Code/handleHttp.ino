@@ -6,6 +6,7 @@ void handleRoot() {
   if (captivePortal()) { // If caprive portal redirect instead of displaying the page.
     return;
   }
+  Serial.println("httphome presenting file");
   server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
   server.sendHeader("Pragma", "no-cache");
   server.sendHeader("Expires", "-1");

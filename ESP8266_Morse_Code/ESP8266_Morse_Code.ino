@@ -175,7 +175,7 @@ void setup(void)
   server.on("/", HTTP_GET, handleRoot);
   
   // Configure a handler for the /morse endpoint.
-  server.on("/morse", HTTP_GET, handleMorsePage);
+  server.on("/morse", HTTP_POST, handleMorsePage);
   
   //[]() {
     // Blink out the message in morse code, then respond 
