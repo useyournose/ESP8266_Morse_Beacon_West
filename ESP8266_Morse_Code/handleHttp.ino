@@ -32,43 +32,43 @@ void handleMorsePage() {
     server.send(500, "text/plain", "BAD ARGS");
     return;
   }
-    String morsereply = "Sending morse light for \n\n";
-    morsereply += "URI: ";
-    morsereply += server.uri();
-    morsereply += "\nMethod: ";
-    morsereply += ( server.method() == HTTP_GET ) ? "GET" : "POST";
-    morsereply += "\nArguments: ";
-    morsereply += server.args();
-    morsereply   += "\n";
-    for ( uint8_t i = 0; i < server.args(); i++ ) {
-      morsereply += " " + server.argName ( i ) + ": " + server.arg ( i ) + "\n";
-    }
-    server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-    server.sendHeader("Pragma", "no-cache");
-    server.sendHeader("Expires", "-1");
-    server.send ( 200, "text/plain", morsereply );
-
+//    String morsereply = "Sending morse light for \n\n";
+//    morsereply += "URI: ";
+//    morsereply += server.uri();
+//    morsereply += "\nMethod: ";
+//    morsereply += ( server.method() == HTTP_GET ) ? "GET" : "POST";
+//    morsereply += "\nArguments: ";
+//    morsereply += server.args();
+//    morsereply   += "\n";
+//    for ( uint8_t i = 0; i < server.args(); i++ ) {
+//      morsereply += " " + server.argName ( i ) + ": " + server.arg ( i ) + "\n";
+//    }
+//    server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+//    server.sendHeader("Pragma", "no-cache");
+//    server.sendHeader("Expires", "-1");
+//    server.send ( 200, "text/plain", morsereply );
   
     // Blink out the message in morse code, then respond 
     // with the root HTML page again.
 
     // Grab the message form parameter and fail if it's
     // larger than our max allowed size.
-    const char* morsemessage = server.arg("message").c_str();
-    if (strlen(morsemessage) >= max_message_len) {
+    //const char* 
+    String morsemessage = server.arg("message");
+    //.c_str();
+    if (morsemessage.length() >= max_message_len) {
       server.send(500, "text/plain", "Message is too long!");
       return;
     }
     // Perform form URL decoding to get the plain message.
     //char decoded[max_message_len] = {0};
     //form_url_decode(morsemessage, decoded);
-    
+    morsemessage.toUpperCase();
     // Print and blink the message!
     Serial.print("Blinking message: "); Serial.println(morsemessage);
-   // Serial.print("Blinking message: "); Serial.println(decoded);
-    blink_morse(led, morsemessage);
+    blink_morse(led, morsemessage.c_str());
     // Return the main page again.
-    //server.send(200,"text/html", index_html);
+    // server.send(200,"text/html", index_html);
     handleRoot;
   }
 
