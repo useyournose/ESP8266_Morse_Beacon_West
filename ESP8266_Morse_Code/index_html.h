@@ -33,9 +33,9 @@ const char* index_html = R"(
         <div class="jumbotron">
           <h1>Morse Code Blinker</h1>
           <p>Submit text to have it blinked out as morse code on the LED!</p>
-          <form action="/morse" method="post">
+          <form action="/morse" method="post" enctype="application/x-www-form-urlencoded" target="/">
             <div class="form-group">
-              <input class="form-control input-lg" type="text" id="message" name="message" placeholder="Enter message..." required="required" autocapitalize="characters"  >
+              <input class="form-control input-lg" type="text" id="message" name="message" placeholder="Enter message..." required="required" autocapitalize="characters" minlength=1 maxlength=500>
             </div>
             <button class="btn btn-lg btn-primary" type="submit">Blink it!</button>
           </form>

@@ -1,12 +1,12 @@
-void blink_morse_char(int led_pin, char c) {
+void blink_morse_char(int led_pin, char bmc) {
   // Blink out the morse code for the specified character.
   // Unrecognized characters are ignored.
 
   // First look up the string of morse code for the character.
   const char* code = NULL;
-  if ((c >= '!') && (c <= '_')) {
+  if ((bmc >= 34) && (bmc <= 95)) {
     // Get the code for an alphabet character.
-    code = morse_codes[c-34];
+    code = morse_codes[bmc-34];
   }
   else {
     // Unknown character, ignore it!
@@ -30,17 +30,17 @@ void blink_morse_char(int led_pin, char c) {
   digitalWrite(led_pin, led_off);
 }
 
-void blink_morse(int led_pin, const char* message) {
+void blink_morse(int led_pin, const char* bmmessage) {
   // Blink out the morse code version of the message on the LED.
   Serial.println("Starting morsing");
-  Serial.print(message);
+  Serial.print(bmmessage);
   // Process each character in the message and send them out 
   // as morse code. Keep track of the previously seen character
   // to find word boundaries.
-  char old = toupper(message[0]);
+  char old = toupper(bmmessage[0]);
   blink_morse_char(led_pin, old);
-  for (int i = 1; i < strlen(message); ++i) {
-    char c = toupper(message[i]);
+  for (int i = 1; i < strlen(bmmessage); ++i) {
+    char c = toupper(bmmessage[i]);
     // Delay for word boundary if last char is whitespace and 
     // new char is alphanumeric.
     if (isspace(old) && isalnum(c)) {
