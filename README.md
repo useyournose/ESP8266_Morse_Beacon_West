@@ -1,4 +1,4 @@
-# ESP2866 Morse Code Web Server with captive portal
+# ESP8266 Morse Code Web Server with Captive Portal
 ESP8266-based web server to display a web page with a form and blink out the form data on a LED in morse code.
 
 Features:
