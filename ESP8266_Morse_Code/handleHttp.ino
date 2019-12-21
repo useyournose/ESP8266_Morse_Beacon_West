@@ -15,6 +15,22 @@ void handleRoot() {
   //server.client().stop(); // Stop is needed because we sent no content length
 }
 
+void handleThanks() {
+  Serial.println("handleRoot opened :");
+  Serial.print(server.hostHeader());
+  Serial.print(server.uri());
+  if (captivePortal()) { // If captive portal redirect instead of displaying the page.
+    return;
+  }
+  Serial.println("handleroot presenting file");
+  server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+  server.sendHeader("Pragma", "no-cache");
+  server.sendHeader("Expires", "-1");
+  //server.setContentLength(CONTENT_LENGTH_UNKNOWN);
+  server.send(200, "text/html", thanks_html);
+  //server.client().stop(); // Stop is needed because we sent no content length
+}
+
 /** Redirect to captive portal if we got a request for another domain. Return true in that case so the page handler do not try to handle the request again. */
 boolean captivePortal() {
   if (!isIp(server.hostHeader()) && server.hostHeader() != (String(ssid)+".local")) {
@@ -69,7 +85,7 @@ void handleMorsePage() {
     blink_morse(led, morsemessage.c_str());
     // Return the main page again.
     // server.send(200,"text/html", index_html);
-    handleRoot;
+    server.send(200, "text/html", thanks_html);
   }
 
 void handleNotFound() {
